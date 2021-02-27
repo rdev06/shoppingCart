@@ -24,27 +24,24 @@ router.post('/removeUser', function (req, res) {
 
 router.use(csrfProtection);
 
-router.get('/profile', isLoggedIn, function (req, res) {
-  Order.find(
-    {
+router.get('/profile', isLoggedIn, async (req, res) => {
+  try {
+    const orders = await Order.find({
       user: req.user
-    },
-    function (err, orders) {
-      if (err) {
-        return res.write('Error!');
-      }
-      let cart;
-      orders.forEach(function (order) {
-        cart = new Cart(order.cart);
-        order.items = cart.generateArray();
-      });
-      res.render('user/profile', {
-        csrfToken: req.csrfToken(),
-        orders: orders,
-        user: req.user._doc
-      });
-    }
-  );
+    }).lean();
+    let cart;
+    orders.forEach(function (order) {
+      cart = new Cart(order.cart);
+      order.items = cart.generateArray();
+    });
+    res.render('user/profile', {
+      csrfToken: req.csrfToken(),
+      orders: orders,
+      user: req.user._doc
+    });
+  } catch (error) {
+    res.write('Error!', error);
+  }
 });
 
 router.post('/profile', function (req, res) {
